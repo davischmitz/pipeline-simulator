@@ -1,12 +1,10 @@
 const fs = require('fs')
 const readline = require('readline');
+const { formatNumber, formatCode, sleep } = require('./utils')
 
 let PC = 0
 const codes = []
 const R = Array(32).fill(0)
-
-const codeTest = "addi $t1, $t0, 1"
-// ADD=1 , ADDI, SUB, SUBI, BEQ, B, 
 
 const NOP = "nop"
 const ADD = "add"
@@ -46,21 +44,21 @@ let registerWriteBack = defaultRegisterValues
 const fetch = () => {
     const code = codes[PC]
 
-    const formatedCode = code.toLowerCase().replace(",", "").replace(",", "")
+    const formattedCode = code.toLowerCase().replace(",", "").replace(",", "")
 
-    if (formatedCode === NOP) {
+    if (formattedCode === NOP) {
         registerFetch = defaultRegisterValues
     } else {
-        const codeList = formatedCode.split(" ")
+        const codeList = formattedCode.split(" ")
         registerFetch.opCode = codeList[0]
 
         if (codeList.length > 3) {
-            registerFetch.op1 = Number(codeList[2].match(/\d/)[0])
-            registerFetch.op2 = Number(codeList[3].match(/\d/)[0])
-            registerFetch.op3 = Number(codeList[1].match(/\d/)[0])
+            registerFetch.op1 = formatNumber(codeList[2])
+            registerFetch.op2 = formatNumber(codeList[3])
+            registerFetch.op3 = formatNumber(codeList[1])
         } else {
-            registerFetch.op1 = Number(codeList[1].match(/\d/)[0])
-            registerFetch.op2 = Number(codeList[2].match(/\d/)[0])
+            registerFetch.op1 = formatNumber(codeList[1])
+            registerFetch.op2 = formatNumber(codeList[2])
             registerFetch.op3 = 0
         }
     }
@@ -121,7 +119,7 @@ const loadCode = () => {
 }
 
 const runNextLine = () => {
-    console.log(`--------------------------------------------- Code: ${codes[PC]} Line: ${PC} ------------------------------------------------`)
+    console.log(`--------------------------------------------- Code: ${codes[PC]} Line: ${PC} ---------------------------------------------`)
 
     writeBack()
     memory()
@@ -134,25 +132,17 @@ const runNextLine = () => {
 
 loadCode()
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 const runner = async () => {
     loadCode()
-
     await sleep(500)
 
     runNextLine()
-
     await sleep(500)
 
     runNextLine()
-
     await sleep(500)
 
     runNextLine()
-
     await sleep(500)
 }
 
