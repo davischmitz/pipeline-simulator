@@ -1,29 +1,12 @@
 const fs = require('fs')
 const readline = require('readline');
-const { formatNumber, formatCode, sleep } = require('./utils')
+const { cloneRegister, createDefaultRegister, formatNumber, formatCode, sleep } = require('./utils')
+
+const OpCode = require("./op-code")
 
 let PC = 0
 const codes = []
 const R = Array(32).fill(0)
-
-const NOP = "nop"
-const ADD = "add"
-const ADDI = "addi"
-const SUB = "sub"
-const SUBI = "subi"
-const BEQ = "beq"
-const B = "b"
-
-const defaultRegisterValues = {
-    opCode: NOP,
-    op1: 0,
-    op2: 0,
-    op3: 0,
-    valid: 0,
-    tempValue1: 0,
-    tempValue2: 0,
-    tempValue3: 0,
-}
 
 const operationCodes = {
     "add": (register) => { register.tempValue1 = register.tempValue2 + register.tempValue3 },
@@ -35,18 +18,18 @@ const operationCodes = {
     "nop": (register) => { },
 }
 
-let registerFetch = defaultRegisterValues
-let registerDecode = defaultRegisterValues
-let registerExecute = defaultRegisterValues
-let registerMemory = defaultRegisterValues
-let registerWriteBack = defaultRegisterValues
+let registerFetch = createDefaultRegister()
+let registerDecode = createDefaultRegister()
+let registerExecute = createDefaultRegister()
+let registerMemory = createDefaultRegister()
+let registerWriteBack = createDefaultRegister()
 
 const fetch = () => {
     const code = codes[PC]
 
-    const formattedCode = code.toLowerCase().replace(",", "").replace(",", "")
+    const formattedCode = formatCode(code)
 
-    if (formattedCode === NOP) {
+    if (formattedCode === OpCode.NOP) {
         registerFetch = defaultRegisterValues
     } else {
         const codeList = formattedCode.split(" ")
@@ -69,13 +52,13 @@ const fetch = () => {
 }
 
 const decode = () => {
-    registerDecode = registerFetch
+    registerDecode = cloneRegister(registerFetch)
 
-    if (registerDecode.opCode === B)
+    if (registerDecode.opCode === OpCode.B)
         registerDecode.tempValue1 = registerDecode.op1;
     else {
         registerDecode.tempValue2 = R[registerDecode.op2];
-        if ((registerDecode.opCode === ADDI) || (registerDecode.opCode === SUBI))
+        if ((registerDecode.opCode === OpCode.ADDI) || (registerDecode.opCode === OpCode.SUBI))
             registerDecode.tempValue3 = registerDecode.op3;
         else
             registerDecode.tempValue3 = R[registerDecode.op3];
@@ -85,7 +68,7 @@ const decode = () => {
 }
 
 const execute = () => {
-    registerExecute = registerDecode
+    registerExecute = cloneRegister(registerDecode)
 
     operationCodes[registerExecute.opCode](registerExecute)
 
@@ -93,13 +76,13 @@ const execute = () => {
 }
 
 const memory = () => {
-    registerMemory = registerExecute
+    registerMemory = cloneRegister(registerExecute)
 }
 
 const writeBack = () => {
-    registerWriteBack = registerMemory
+    registerWriteBack = cloneRegister(registerMemory)
 
-    if ((registerWriteBack.opCode == ADDI) || (registerWriteBack.opCode == ADD) || (registerWriteBack.opCode == SUBI) || (registerWriteBack.opCode == SUB))
+    if ((registerWriteBack.opCode == OpCode.ADDI) || (registerWriteBack.opCode == OpCode.ADD) || (registerWriteBack.opCode == OpCode.SUBI) || (registerWriteBack.opCode == OpCode.SUB))
         R[registerWriteBack.op1] = registerWriteBack.tempValue1;
 
     console.log("Register WriteBack", registerWriteBack)
