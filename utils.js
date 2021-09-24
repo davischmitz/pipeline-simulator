@@ -16,10 +16,10 @@ const createDefaultRegister = () => ({
     op1: 0,
     op2: 0,
     op3: 0,
-    valid: 0,
     tempValue1: 0,
     tempValue2: 0,
     tempValue3: 0,
+    valid: true,
 })
 
 const formatCode = (code) => code.toLowerCase().replace(",", "").replace(",", "")
