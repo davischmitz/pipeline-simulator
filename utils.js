@@ -9,9 +9,11 @@ const cloneRegister = (register) => ({
     tempValue1: register.tempValue1,
     tempValue2: register.tempValue2,
     tempValue3: register.tempValue3,
+    code: register.code,
+    pc: register.pc,
 })
 
-const createDefaultRegister = () => ({
+const createDefaultRegister = (pc = 0) => ({
     opCode: OpCode.NOP,
     op1: 0,
     op2: 0,
@@ -20,11 +22,13 @@ const createDefaultRegister = () => ({
     tempValue2: 0,
     tempValue3: 0,
     valid: true,
+    code: "",
+    pc,
 })
 
 const formatCode = (code) => code.toLowerCase().replace(",", "").replace(",", "")
 
-const formatNumber = (value) => Number(value.match(/\d/)[0] || 0)
+const formatNumber = (value) => Number(value.match(/-?[0-9]\d*(\.\d+)?/)[0] || 0)
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

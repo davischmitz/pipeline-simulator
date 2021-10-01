@@ -1,5 +1,7 @@
 const fs = require('fs')
+const prompt = require('prompt')
 const readline = require('readline');
+const readlineSync = require('readline-sync');
 const { cloneRegister, createDefaultRegister, formatNumber, formatCode, sleep } = require('./utils')
 
 const OpCode = require("./op-code")
@@ -12,10 +14,10 @@ let validInstructions = 0
 let invalidInstructions = 0
 
 const operationCodes = {
-    "add": (register) => { register.tempValue2 = register.tempValue3 + register.tempValue1 },
-    "addi": (register) => { register.tempValue2 = register.tempValue3 + register.tempValue1 },
-    "sub": (register) => { register.tempValue2 = register.tempValue3 - register.tempValue1 },
-    "subi": (register) => { register.tempValue2 = register.tempValue3 - register.tempValue1 },
+    "add": (register) => { register.tempValue1 = register.tempValue3 + register.tempValue2 },
+    "addi": (register) => { register.tempValue1 = register.tempValue3 + register.tempValue2 },
+    "sub": (register) => { register.tempValue1 = register.tempValue2 - register.tempValue3 },
+    "subi": (register) => { register.tempValue1 = register.tempValue2 - register.tempValue3 },
     "beq": (register) => {
         if (register.tempValue1 === register.tempValue2) {
             PC += (register.tempValue3 - 2);
@@ -24,7 +26,7 @@ const operationCodes = {
         }
     },
     "b": (register) => {
-        PC += (register.tempValue3 - 2); 
+        PC += (register.tempValue3 - 2);
         registerFetch.valid = false
         registerDecode.valid = false
     },
@@ -38,7 +40,12 @@ let registerMemory = createDefaultRegister()
 let registerWriteBack = createDefaultRegister()
 
 const fetch = () => {
+    registerFetch = createDefaultRegister()
+    registerFetch.pc = PC
+
     const code = codes[PC]
+
+    if (!code) return
 
     const formattedCode = formatCode(code)
     const codeList = formattedCode.split(" ")
@@ -54,6 +61,10 @@ const fetch = () => {
         registerFetch.op3 = formatNumber(codeList[3])
     }
 
+    registerFetch.code = code;
+
+    console.log("Register Fetch", registerFetch)
+
     PC++
 }
 
@@ -67,11 +78,11 @@ const decode = () => {
         registerDecode.tempValue2 = R[registerDecode.op2]
         registerDecode.tempValue3 = registerDecode.op3
     } else {
-        registerDecode.tempValue3 = R[registerDecode.op3];
+        registerDecode.tempValue2 = R[registerDecode.op2];
         if ((registerDecode.opCode === OpCode.ADDI) || (registerDecode.opCode === OpCode.SUBI))
-            registerDecode.tempValue1 = registerDecode.op1;
+            registerDecode.tempValue3 = registerDecode.op3;
         else
-            registerDecode.tempValue1 = R[registerDecode.op1];
+            registerDecode.tempValue3 = R[registerDecode.op3];
     }
 
     console.log("Register Decode", registerDecode)
@@ -95,7 +106,7 @@ const writeBack = () => {
     if (registerWriteBack.valid) {
         validInstructions++
         if ((registerWriteBack.opCode == OpCode.ADDI) || (registerWriteBack.opCode == OpCode.ADD) || (registerWriteBack.opCode == OpCode.SUBI) || (registerWriteBack.opCode == OpCode.SUB))
-            R[registerWriteBack.op1] = registerWriteBack.tempValue2;
+            R[registerWriteBack.op1] = registerWriteBack.tempValue1;
     } else {
         invalidInstructions++
     }
@@ -117,7 +128,7 @@ const loadCode = () => {
 }
 
 const runNextLine = () => {
-    console.log(`--------------------------------------------- Code: ${codes[PC]} Line: ${PC} ---------------------------------------------`)
+    console.log(`-------------- Code: ${codes[PC]} Line: ${PC} --------------`)
 
     writeBack()
     memory()
@@ -128,71 +139,22 @@ const runNextLine = () => {
     console.log("R", R)
 }
 
-loadCode()
-
 const runner = async () => {
     loadCode()
     await sleep(500)
 
-    runNextLine()
-    await sleep(500)
+    console.log(
+        codes.length)
 
     runNextLine()
-    await sleep(500)
 
-    runNextLine()
-    await sleep(500)
+    while (registerWriteBack.pc < codes.length) {
+        readlineSync.question('Run next line? (Press Enter)');
+        runNextLine()
+    }
 
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
-
-    runNextLine()
-    await sleep(500)
+    console.log(validInstructions)
+    console.log(invalidInstructions)
 }
 
 runner()
