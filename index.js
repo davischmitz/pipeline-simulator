@@ -1,5 +1,4 @@
 const fs = require("fs");
-const prompt = require("prompt");
 const readline = require("readline");
 const readlineSync = require("readline-sync");
 const {
@@ -15,6 +14,8 @@ const OpCode = require("./op-code");
 let PC = 0;
 const codes = [];
 const R = Array(32).fill(0);
+const isPredictionEnabled = true;
+const predictionTable = Array(32).fill(0);
 
 let validInstructions = 0;
 let invalidInstructions = 0;
@@ -35,10 +36,14 @@ const operationCodes = {
   beq: (register) => {
     if (register.tempValue1 === register.tempValue2) {
       register.tempValue1 = register.pc + register.tempValue3;
+      updatePredictionTable(register.pc, 1);
+    } else {
+      updatePredictionTable(register.pc, -1);
     }
   },
   b: (register) => {
     register.tempValue1 = register.pc + register.tempValue3;
+    updatePredictionTable(register.pc, 1);
   },
   nop: (register) => {},
 };
@@ -48,6 +53,66 @@ let registerDecode = createDefaultRegister();
 let registerExecute = createDefaultRegister();
 let registerMemory = createDefaultRegister();
 let registerWriteBack = createDefaultRegister();
+
+const shouldBranch = (pc) => {
+  const address = pc % 32;
+  return predictionTable[address] >= 2;
+};
+
+const incrementPC = () => {
+  if (!isPredictionEnabled) {
+    PC++;
+    return;
+  }
+
+  if (
+    registerFetch.opCode === OpCode.BEQ ||
+    registerFetch.opCode === OpCode.B
+  ) {
+    if (shouldBranch(registerFetch.pc)) {
+      // branch was taken
+      PC += registerFetch.op3;
+      registerFetch.branchWasTaken = true;
+      return;
+    }
+  }
+
+  PC++;
+};
+
+const handleMissPrediction = () => {
+  if (!registerMemory.valid) {
+    return;
+  }
+
+  // testa se deve desviar
+  if (registerMemory.tempValue1) {
+    // predição desligada ou desvio não tomado
+    if (!isPredictionEnabled || !registerMemory.branchWasTaken) {
+      PC = registerMemory.tempValue1;
+      registerFetch.valid = false;
+      registerDecode.valid = false;
+      registerExecute.valid = false;
+    }
+    // não deve desviar, mas desviou
+  } else if (registerMemory.branchWasTaken) {
+    PC = registerMemory.pc + 1;
+    registerFetch.valid = false;
+    registerDecode.valid = false;
+    registerExecute.valid = false;
+  }
+};
+
+const updatePredictionTable = (pc, increment) => {
+  const address = pc % 32;
+  predictionTable[address] += increment;
+
+  if (predictionTable[address] > 3) {
+    predictionTable[address] = 3;
+  } else if (predictionTable[address] < 0) {
+    predictionTable[address] = 0;
+  }
+};
 
 const fetch = () => {
   registerFetch = createDefaultRegister();
@@ -64,18 +129,18 @@ const fetch = () => {
   const codeList = formattedCode.split(" ");
   registerFetch.opCode = codeList[0];
 
-  registerFetch.code = code;
-  PC++;
-
-  if (registerFetch.opCode === OpCode.NOP) {
-    return;
-  } else if (registerFetch.opCode === OpCode.B) {
-    registerFetch.op3 = formatNumber(codeList[1]);
-  } else {
-    registerFetch.op1 = formatNumber(codeList[1]);
-    registerFetch.op2 = formatNumber(codeList[2]);
-    registerFetch.op3 = formatNumber(codeList[3]);
+  if (registerFetch.opCode !== OpCode.NOP) {
+    if (registerFetch.opCode === OpCode.B) {
+      registerFetch.op3 = formatNumber(codeList[1]);
+    } else {
+      registerFetch.op1 = formatNumber(codeList[1]);
+      registerFetch.op2 = formatNumber(codeList[2]);
+      registerFetch.op3 = formatNumber(codeList[3]);
+    }
   }
+
+  registerFetch.code = code;
+  incrementPC();
 };
 
 const decode = () => {
@@ -157,12 +222,7 @@ const runNextLine = () => {
     registerMemory.opCode === OpCode.B ||
     registerMemory.opCode === OpCode.BEQ
   ) {
-    if (registerMemory.valid && registerMemory.tempValue1) {
-      PC = registerMemory.tempValue1;
-      registerFetch.valid = false;
-      registerDecode.valid = false;
-      registerExecute.valid = false;
-    }
+    handleMissPrediction();
   }
 
   console.log("Register Fetch", registerFetch);
