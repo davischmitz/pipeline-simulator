@@ -33,17 +33,16 @@ npm start
 
 #### Sem predição:
 - Total cycles: 176
-- Valid instructions: 109
+- Valid instructions: 109 (61,9%)
 - Invalid instructions: 67
 
 #### Com predição:
 - Total cycles: 128
-- Valid instructions: 109
+- Valid instructions: 109 (85,1%)
 - Invalid instructions: 19
 
 #### Com a predição, resultou em:
-- 48 ciclos a menos
-- 48 instruções inválidas a menos
+- 48 ciclos, referentes às instruções inválidas, a menos (27,3% dos ciclos sem predição)
 
 Executando o seguinte código no DrMips com o pipeline.cpu:
 
