@@ -32,7 +32,7 @@ npm start
 - 48 ciclos a menos
 - 48 instruções inválidas a menos
 
-Executando o seguinte código no DrMips:
+Executando o seguinte código no DrMips com o pipeline.cpu:
 
 ```addi $t1, $t0, 1
 addi $t2, $t0, 2
