@@ -20,17 +20,16 @@ npm start
 
 #### Sem predição:
 - Total cycles: 176
-- Valid instructions: 109
+- Valid instructions: 109 (61,9%)
 - Invalid instructions: 67
 
 #### Com predição:
 - Total cycles: 128
-- Valid instructions: 109
+- Valid instructions: 109 (85,1%)
 - Invalid instructions: 19
 
 #### Com a predição, resultou em:
-- 48 ciclos a menos
-- 48 instruções inválidas a menos
+- 48 ciclos, referentes às instruções inválidas, a menos (27,3% dos ciclos sem predição)
 
 Executando o seguinte código no DrMips com o pipeline.cpu:
 
@@ -42,16 +41,19 @@ nop
 nop
 nop
 beq $t0, $t3, 5
-addi $t3, $t3, -1
+addi $t3, $t3, -1 # *
 addi $t1, $t0, 1
 addi $t2, $t0, 1
-b -5
+b -5 # **
 beq $t0, $t4, 5
-addi $t4, $t4, -1
+addi $t4, $t4, -1 #*
 addi $t1, $t0, 1
 addi $t2, $t0, 1
-b -5
+b -5 # **
 nop
+# Para compatibilização com o DrMips:
+# *Estava convertendo incorretamente a pseudo-instrução 'subi'
+# **O branch retroativo ainda incrementa o pc em uma instrução
 ```
 
 As estatísticas resultantes foram as seguintes:
