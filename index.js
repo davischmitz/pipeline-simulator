@@ -10,7 +10,7 @@ const {
 } = require("./utils");
 
 // CONFIG
-const isPredictionEnabled = true;
+const isPredictionEnabled = true;  //por default, a predição é habilitada
 const runLineByLine = false;
 
 const OpCode = require("./op-code");
@@ -83,8 +83,7 @@ const incrementPC = () => {
     registerFetch.opCode === OpCode.BEQ ||
     registerFetch.opCode === OpCode.B
   ) {
-    if (shouldBranch(registerFetch.pc)) {
-      // branch was taken
+    if (shouldBranch(registerFetch.pc)) {// desvio deve ser tomado
       PC += registerFetch.op3;
       registerFetch.branchWasTaken = true;
       return;
