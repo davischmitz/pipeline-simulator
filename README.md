@@ -46,15 +46,15 @@ addi $t1, $t0, 1
 addi $t2, $t0, 1
 b -5 # **
 beq $t0, $t4, 5
-addi $t4, $t4, -1 #*
+addi $t4, $t4, -1 # *
 addi $t1, $t0, 1
 addi $t2, $t0, 1
 b -5 # **
 nop
-# Para compatibilização com o DrMips:
-# *Estava convertendo incorretamente a pseudo-instrução 'subi'
-# **O branch retroativo ainda incrementa o pc em uma instrução
 ```
+Para compatibilização com o DrMips:
+- (*) Estava convertendo incorretamente a pseudo-instrução 'subi'
+- (**) O branch retroativo ainda incrementa o pc em uma instrução
 
 As estatísticas resultantes foram as seguintes:
 
