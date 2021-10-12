@@ -16,3 +16,18 @@ ADD , ADDI, SUB, SUBI, BEQ, B
 npm start
 ```
 
+### Comparação da execução do pipeline
+
+#### Sem predição:
+- Total cycles: 176
+- Valid instructions: 109
+- Invalid instructions: 67
+
+#### Com predição:
+- Total cycles: 128
+- Valid instructions: 109
+- Invalid instructions: 19
+
+#### Com a predição, resultou em:
+- 48 ciclos a menos
+- 48 instruções inválidas a menos
