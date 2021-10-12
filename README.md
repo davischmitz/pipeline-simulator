@@ -11,7 +11,7 @@ ADD , ADDI, SUB, SUBI, BEQ, B
 - 32 registradores inicializados com '0' em todas as posições
 
 ### Mecanismo de predição
-- indica qual a próxima instrução a ser buscada
+- indica qual a próxima instrução a ser buscada (em caso de instruções condicionais, o compilador não sabe que caminho o código vai seguir antes de ele ser realmente executado, então o mecanismo de predição vai auxiliar nisso)
 - na etapa de fetch (busca) identifica se é uma instrução condicional
 
 ### Mecanismo de verificação do acerto da instrução
