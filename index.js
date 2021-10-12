@@ -9,16 +9,36 @@ const {
   sleep,
 } = require("./utils");
 
+// CONFIG
+const isPredictionEnabled = true;
+const runLineByLine = false;
+
 const OpCode = require("./op-code");
 
 let PC = 0;
 const codes = [];
 const R = Array(32).fill(0);
-const isPredictionEnabled = true;
 const predictionTable = Array(32).fill(0);
 
 let validInstructions = 0;
 let invalidInstructions = 0;
+
+let registerFetch = createDefaultRegister();
+let registerDecode = createDefaultRegister();
+let registerExecute = createDefaultRegister();
+let registerMemory = createDefaultRegister();
+let registerWriteBack = createDefaultRegister();
+
+const updatePredictionTable = (pc, increment) => {
+  const address = pc % 32;
+  predictionTable[address] += increment;
+
+  if (predictionTable[address] > 3) {
+    predictionTable[address] = 3;
+  } else if (predictionTable[address] < 0) {
+    predictionTable[address] = 0;
+  }
+};
 
 const operationCodes = {
   add: (register) => {
@@ -45,14 +65,8 @@ const operationCodes = {
     register.tempValue1 = register.pc + register.tempValue3;
     updatePredictionTable(register.pc, 1);
   },
-  nop: (register) => {},
+  nop: () => {},
 };
-
-let registerFetch = createDefaultRegister();
-let registerDecode = createDefaultRegister();
-let registerExecute = createDefaultRegister();
-let registerMemory = createDefaultRegister();
-let registerWriteBack = createDefaultRegister();
 
 const shouldBranch = (pc) => {
   const address = pc % 32;
@@ -100,17 +114,6 @@ const handleMissPrediction = () => {
     registerFetch.valid = false;
     registerDecode.valid = false;
     registerExecute.valid = false;
-  }
-};
-
-const updatePredictionTable = (pc, increment) => {
-  const address = pc % 32;
-  predictionTable[address] += increment;
-
-  if (predictionTable[address] > 3) {
-    predictionTable[address] = 3;
-  } else if (predictionTable[address] < 0) {
-    predictionTable[address] = 0;
   }
 };
 
@@ -237,7 +240,7 @@ const runner = async () => {
   loadCode();
   await sleep(500);
 
-  console.log(codes.length);
+  console.log("Code lines:", codes.length);
 
   runNextLine();
 
@@ -248,12 +251,15 @@ const runner = async () => {
     registerMemory.valid ||
     registerWriteBack.valid
   ) {
-    // readlineSync.question("Run next line? (Press Enter)");
+    if (runLineByLine) {
+      readlineSync.question("Run next line? (Press Enter)");
+    }
     runNextLine();
   }
 
-  console.log(validInstructions + invalidInstructions);
-  console.log(validInstructions);
+  console.log("Total cycles:", validInstructions + invalidInstructions);
+  console.log("Valid instructions:", validInstructions);
+  console.log("Invalid instructions:", invalidInstructions);
 };
 
 runner();
